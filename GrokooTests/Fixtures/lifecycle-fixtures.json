@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "scenarios": [
+    {"id":"sleepWake","events":["willSleep","didWake"],"expected":["markOffline","reloadSession","refreshRoster","restartSSE"]},
+    {"id":"screenChange","events":["screenParametersChanged"],"expected":["recomputeEdgeGeometry","recomputeWorkstations"]},
+    {"id":"hideShow","events":["hideAll","showAll"],"expected":["cancelAnimations","hidePanel","showPanel","restoreCurrentPresence"]},
+    {"id":"terminate","events":["terminate"],"expected":["cancelGateway","cancelAnimations","removePanel"]}
+  ]
+}

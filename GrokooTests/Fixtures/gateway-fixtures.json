@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "listAgentsWrappers": {
+    "direct": [
+      {"id":"bot-1","name":"Sandy","isGroup":false,"memberIds":[],"avatarShape":null,"avatarColor":"blue","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false}
+    ],
+    "agents": {
+      "agents": [
+        {"id":"bot-1","name":"Sandy","isGroup":false,"memberIds":[],"avatarShape":"blob","avatarColor":"blue","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false}
+      ]
+    },
+    "valueRows": {
+      "value": {"rows": [
+        {"id":"bot-1","name":"Sandy","isGroup":false,"memberIds":[],"avatarShape":"blob","avatarColor":"blue","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false}
+      ]}
+    }
+  },
+  "rosters": {
+    "one": [
+      {"id":"bot-1","name":"Sandy","isGroup":false,"memberIds":[],"avatarShape":null,"avatarColor":"blue","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false}
+    ],
+    "six": [
+      {"id":"bot-1","name":"Sandy","isGroup":false,"memberIds":[],"avatarShape":"blob","avatarColor":"blue","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false},
+      {"id":"bot-2","name":"Ada","isGroup":false,"memberIds":[],"avatarShape":"pebble","avatarColor":"green","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false},
+      {"id":"bot-3","name":"Lin","isGroup":false,"memberIds":[],"avatarShape":"squircle","avatarColor":"orange","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false},
+      {"id":"bot-4","name":"Mina","isGroup":false,"memberIds":[],"avatarShape":"tablet","avatarColor":"magenta","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false},
+      {"id":"bot-5","name":"Nova","isGroup":false,"memberIds":[],"avatarShape":"wedge","avatarColor":"yellow","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false},
+      {"id":"bot-6","name":"Kai","isGroup":false,"memberIds":[],"avatarShape":"hex","avatarColor":"violet","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false}
+    ],
+    "seven": [
+      {"id":"bot-1","name":"Sandy","isGroup":false,"memberIds":[],"avatarShape":"blob","avatarColor":"blue","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false},
+      {"id":"bot-2","name":"Ada","isGroup":false,"memberIds":[],"avatarShape":"pebble","avatarColor":"green","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false},
+      {"id":"bot-3","name":"Lin","isGroup":false,"memberIds":[],"avatarShape":"squircle","avatarColor":"orange","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false},
+      {"id":"bot-4","name":"Mina","isGroup":false,"memberIds":[],"avatarShape":"tablet","avatarColor":"magenta","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false},
+      {"id":"bot-5","name":"Nova","isGroup":false,"memberIds":[],"avatarShape":"wedge","avatarColor":"yellow","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false},
+      {"id":"bot-6","name":"Kai","isGroup":false,"memberIds":[],"avatarShape":"hex","avatarColor":"violet","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false},
+      {"id":"bot-7","name":"Iris","isGroup":false,"memberIds":[],"avatarShape":"cloud","avatarColor":"cyan","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false}
+    ],
+    "mixedGroup": [
+      {"id":"bot-1","name":"Sandy","isGroup":false,"memberIds":[],"avatarShape":"blob","avatarColor":"blue","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false},
+      {"id":"bot-2","name":"Ada","isGroup":false,"memberIds":[],"avatarShape":"teardrop","avatarColor":"red","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false},
+      {"id":"group-1","name":"Pair","isGroup":true,"memberIds":["bot-1","bot-2","missing"],"avatarShape":"cloud","avatarColor":"gray","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null,"hasUnread":false}
+    ]
+  },
+  "eventCycles": {
+    "singleMessageBeforeStop": [
+      {"type":"agent-upserted","agent":{"id":"bot-1","isRunning":true,"isComposingMessage":false,"awaitingUserResponse":null},"messageRevision":null},
+      {"type":"message-metadata","agent":{"id":"bot-1"},"messageRevision":"rev-1"},
+      {"type":"agent-upserted","agent":{"id":"bot-1","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null},"messageRevision":"rev-1"}
+    ],
+    "singleMessageAfterStop": [
+      {"type":"agent-upserted","agent":{"id":"bot-1","isRunning":true,"isComposingMessage":false,"awaitingUserResponse":null},"messageRevision":null},
+      {"type":"agent-upserted","agent":{"id":"bot-1","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null},"messageRevision":null},
+      {"type":"message-metadata","agent":{"id":"bot-1"},"messageRevision":"rev-2"}
+    ],
+    "explicitWaiting": [
+      {"type":"agent-upserted","agent":{"id":"bot-1","isRunning":true,"isComposingMessage":false,"awaitingUserResponse":{"kind":"approval"}},"messageRevision":null}
+    ],
+    "disconnectRecovery": [
+      {"type":"connection","available":false},
+      {"type":"connection","available":true},
+      {"type":"roster-correction","agent":{"id":"bot-1","isRunning":false,"isComposingMessage":false,"awaitingUserResponse":null},"messageRevision":"rev-2"}
+    ],
+    "groupEarlyFinish": [
+      {"type":"agent-upserted","agent":{"id":"group-1","isGroup":true,"memberIds":["bot-1","bot-2"],"isRunning":true}},
+      {"type":"agent-upserted","agent":{"id":"bot-1","isRunning":true}},
+      {"type":"agent-upserted","agent":{"id":"bot-2","isRunning":true}},
+      {"type":"agent-upserted","agent":{"id":"bot-1","isRunning":false},"messageRevision":"group-rev-1"},
+      {"type":"agent-upserted","agent":{"id":"group-1","isGroup":true,"memberIds":["bot-1","bot-2"],"isRunning":false}},
+      {"type":"agent-upserted","agent":{"id":"bot-2","isRunning":false},"messageRevision":"group-rev-2"}
+    ]
+  }
+}

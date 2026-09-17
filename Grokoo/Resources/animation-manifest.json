@@ -1,0 +1,158 @@
+{
+  "version": 2,
+  "actions": {
+    "idleBreathe": {
+      "driver": "coreAnimation",
+      "state": "idle",
+      "surfaces": ["floor", "leftWall", "rightWall", "ceiling", "station", "groupStation"],
+      "durationRangeSeconds": [2.4, 3.6],
+      "loop": true,
+      "preservesShape": true,
+      "fallback": "staticWithBlink"
+    },
+    "blink": {
+      "driver": "coreAnimation",
+      "state": "blink",
+      "surfaces": ["floor", "leftWall", "rightWall", "ceiling", "station", "groupStation"],
+      "durationRangeSeconds": [0.1, 0.18],
+      "loop": false,
+      "preservesShape": true,
+      "fallback": "skip"
+    },
+    "floorMove": {
+      "driver": "coreAnimation",
+      "state": "floorMove",
+      "surfaces": ["floor"],
+      "durationRangeSeconds": [4.0, 12.0],
+      "loop": false,
+      "preservesShape": true,
+      "fallback": "linearTranslation"
+    },
+    "climbLeft": {
+      "driver": "coreAnimation",
+      "state": "climbPulse",
+      "surfaces": ["leftWall"],
+      "durationRangeSeconds": [3.0, 10.0],
+      "loop": false,
+      "preservesShape": true,
+      "fallback": "linearTranslation"
+    },
+    "climbRight": {
+      "driver": "coreAnimation",
+      "state": "climbPulse",
+      "surfaces": ["rightWall"],
+      "durationRangeSeconds": [3.0, 10.0],
+      "loop": false,
+      "preservesShape": true,
+      "fallback": "linearTranslation"
+    },
+    "ceilingHang": {
+      "driver": "coreAnimation",
+      "state": "hangSway",
+      "surfaces": ["ceiling"],
+      "durationRangeSeconds": [1.0, 4.0],
+      "loop": false,
+      "preservesShape": true,
+      "fallback": "invertedIdle"
+    },
+    "ceilingMove": {
+      "driver": "coreAnimation",
+      "state": "ceilingMove",
+      "surfaces": ["ceiling"],
+      "durationRangeSeconds": [3.0, 10.0],
+      "loop": false,
+      "preservesShape": true,
+      "fallback": "linearTranslation"
+    },
+    "turnBottomCorner": {
+      "driver": "composite",
+      "state": "cornerSqueeze90",
+      "surfaces": ["floor", "leftWall", "rightWall"],
+      "durationRangeSeconds": [0.22, 0.36],
+      "loop": false,
+      "preservesShape": false,
+      "fallback": "rotate90"
+    },
+    "turnTopCorner": {
+      "driver": "composite",
+      "state": "cornerGrab90",
+      "surfaces": ["leftWall", "rightWall", "ceiling"],
+      "durationRangeSeconds": [0.24, 0.4],
+      "loop": false,
+      "preservesShape": false,
+      "fallback": "rotate90"
+    },
+    "teleportToStation": {
+      "driver": "composite",
+      "state": "squeezeFadeTeleport",
+      "surfaces": ["floor", "leftWall", "rightWall", "ceiling", "station"],
+      "durationRangeSeconds": [0.18, 0.3],
+      "loop": false,
+      "preservesShape": false,
+      "fallback": "instantPositionFadeIn"
+    },
+    "workAtStation": {
+      "driver": "composite",
+      "state": "baseBodyWork",
+      "surfaces": ["station"],
+      "durationRangeSeconds": [1.6, 2.4],
+      "loop": true,
+      "preservesShape": true,
+      "fallback": "idleBreatheWithStatusLight"
+    },
+    "waitAtStation": {
+      "driver": "composite",
+      "state": "baseBodyNotify",
+      "surfaces": ["station", "groupStation"],
+      "durationRangeSeconds": [1.2, 1.8],
+      "loop": true,
+      "preservesShape": true,
+      "fallback": "staticWaitMarker"
+    },
+    "celebrate": {
+      "driver": "coreAnimation",
+      "state": "play",
+      "surfaces": ["station", "groupStation"],
+      "durationRangeSeconds": [3.0, 5.0],
+      "loop": false,
+      "preservesShape": false,
+      "fallback": "doubleBounce"
+    },
+    "offlineSleep": {
+      "driver": "composite",
+      "state": "baseBodySleep",
+      "surfaces": ["floor", "leftWall", "rightWall", "ceiling", "station"],
+      "durationRangeSeconds": [2.6, 4.0],
+      "loop": true,
+      "preservesShape": true,
+      "fallback": "dimmedStatic"
+    },
+    "joinGroupStation": {
+      "driver": "composite",
+      "state": "squeezeFadeTeleport",
+      "surfaces": ["floor", "leftWall", "rightWall", "ceiling", "station", "groupStation"],
+      "durationRangeSeconds": [0.2, 0.35],
+      "loop": false,
+      "preservesShape": false,
+      "fallback": "instantPositionFadeIn"
+    },
+    "workInGroup": {
+      "driver": "composite",
+      "state": "baseBodyGroupWork",
+      "surfaces": ["groupStation"],
+      "durationRangeSeconds": [1.6, 2.4],
+      "loop": true,
+      "preservesShape": true,
+      "fallback": "workAtStation"
+    },
+    "leaveGroupStation": {
+      "driver": "composite",
+      "state": "fadeTeleportRestore",
+      "surfaces": ["groupStation"],
+      "durationRangeSeconds": [0.18, 0.3],
+      "loop": false,
+      "preservesShape": false,
+      "fallback": "instantPositionFadeIn"
+    }
+  }
+}

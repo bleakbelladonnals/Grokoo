@@ -1,0 +1,32 @@
+# Publish only the application, tests, build scripts and essential repository files.
+/*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/THIRD_PARTY_NOTICES.md
+!/project.yml
+!/Grokoo/
+!/GrokooTests/
+!/ThirdParty/
+!/scripts/
+!/.github/
+
+# Local development material and generated output stay outside Git history.
+**/docs/
+**/specs/
+**/evidence/
+**/prototypes/
+**/research/
+**/references/
+**/incubator/
+**/AGENTS.md
+**/SKILL.md
+**/.DS_Store
+**/xcuserdata/
+**/*.xcuserstate
+**/.env
+**/.env.*
+**/*.log
+**/*.xcresult/
+**/node_modules/
+**/__pycache__/

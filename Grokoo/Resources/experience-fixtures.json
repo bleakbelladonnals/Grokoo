@@ -1,0 +1,516 @@
+[
+  {
+    "id": "idle",
+    "visibleBotCount": 6,
+    "states": [
+      "idle"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "solo-1",
+    "visibleBotCount": 1,
+    "states": [
+      "working"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "solo-2",
+    "visibleBotCount": 2,
+    "states": [
+      "working"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "light",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "solo-4",
+    "visibleBotCount": 4,
+    "states": [
+      "working"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "dark",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "solo-6",
+    "visibleBotCount": 6,
+    "states": [
+      "working"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "group-2",
+    "visibleBotCount": 2,
+    "states": [
+      "working"
+    ],
+    "groups": [
+      [
+        0,
+        1
+      ]
+    ],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "group-3",
+    "visibleBotCount": 3,
+    "states": [
+      "working"
+    ],
+    "groups": [
+      [
+        0,
+        1,
+        2
+      ]
+    ],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "group-4",
+    "visibleBotCount": 4,
+    "states": [
+      "working"
+    ],
+    "groups": [
+      [
+        0,
+        1,
+        2,
+        3
+      ]
+    ],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "group-5",
+    "visibleBotCount": 5,
+    "states": [
+      "working"
+    ],
+    "groups": [
+      [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    ],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "group-6",
+    "visibleBotCount": 6,
+    "states": [
+      "working"
+    ],
+    "groups": [
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    ],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "dual-2+2",
+    "visibleBotCount": 4,
+    "states": [
+      "working"
+    ],
+    "groups": [
+      [
+        0,
+        1
+      ],
+      [
+        2,
+        3
+      ]
+    ],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "dual-2+3",
+    "visibleBotCount": 5,
+    "states": [
+      "working"
+    ],
+    "groups": [
+      [
+        0,
+        1
+      ],
+      [
+        2,
+        3,
+        4
+      ]
+    ],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "dual-3+3",
+    "visibleBotCount": 6,
+    "states": [
+      "working"
+    ],
+    "groups": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        3,
+        4,
+        5
+      ]
+    ],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "dual-2+4",
+    "visibleBotCount": 6,
+    "states": [
+      "working"
+    ],
+    "groups": [
+      [
+        0,
+        1
+      ],
+      [
+        2,
+        3,
+        4,
+        5
+      ]
+    ],
+    "dockEdge": "right",
+    "wallpaper": "dark",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "mixed-1+3",
+    "visibleBotCount": 4,
+    "states": [
+      "working"
+    ],
+    "groups": [
+      [
+        1,
+        2,
+        3
+      ]
+    ],
+    "dockEdge": "left",
+    "wallpaper": "light",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "seven-states",
+    "visibleBotCount": 6,
+    "states": [
+      "working",
+      "thinking",
+      "waiting",
+      "blocked",
+      "done",
+      "offline"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "reduce-transparency",
+    "visibleBotCount": 4,
+    "states": [
+      "working"
+    ],
+    "groups": [
+      [
+        0,
+        1,
+        2,
+        3
+      ]
+    ],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": true,
+    "reducedMotion": false
+  },
+  {
+    "id": "reduce-motion",
+    "visibleBotCount": 4,
+    "states": [
+      "done"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": true
+  },
+  {
+    "id": "state-idle",
+    "visibleBotCount": 1,
+    "states": [
+      "idle"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "state-working",
+    "visibleBotCount": 1,
+    "states": [
+      "working"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "state-thinking",
+    "visibleBotCount": 1,
+    "states": [
+      "thinking"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "state-waiting",
+    "visibleBotCount": 1,
+    "states": [
+      "waiting"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "state-blocked",
+    "visibleBotCount": 1,
+    "states": [
+      "blocked"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "state-done",
+    "visibleBotCount": 1,
+    "states": [
+      "done"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "state-offline",
+    "visibleBotCount": 1,
+    "states": [
+      "offline"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "dock-bottom",
+    "visibleBotCount": 4,
+    "states": [
+      "working"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "dock-left",
+    "visibleBotCount": 4,
+    "states": [
+      "working"
+    ],
+    "groups": [],
+    "dockEdge": "left",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "dock-right",
+    "visibleBotCount": 4,
+    "states": [
+      "working"
+    ],
+    "groups": [],
+    "dockEdge": "right",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "dock-autohide",
+    "visibleBotCount": 4,
+    "states": [
+      "working"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "wallpaper-light",
+    "visibleBotCount": 4,
+    "states": [
+      "working"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "light",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "wallpaper-dark",
+    "visibleBotCount": 4,
+    "states": [
+      "working"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "dark",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "wallpaper-complex",
+    "visibleBotCount": 4,
+    "states": [
+      "working"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "done-2",
+    "visibleBotCount": 2,
+    "states": [
+      "done"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "done-6",
+    "visibleBotCount": 6,
+    "states": [
+      "done"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": false
+  },
+  {
+    "id": "reduce-motion-idle",
+    "visibleBotCount": 6,
+    "states": [
+      "idle"
+    ],
+    "groups": [],
+    "dockEdge": "bottom",
+    "wallpaper": "complex",
+    "reducedTransparency": false,
+    "reducedMotion": true
+  }
+]

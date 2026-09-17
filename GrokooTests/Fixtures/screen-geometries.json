@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "cases": [
+    {"id":"dockBottom","screenFrame":[0,0,1470,956],"visibleFrame":[0,60,1470,872],"safeInsets":[0,0,0,0]},
+    {"id":"dockLeft","screenFrame":[0,0,1470,956],"visibleFrame":[72,24,1398,932],"safeInsets":[0,0,0,0]},
+    {"id":"dockRight","screenFrame":[0,0,1470,956],"visibleFrame":[0,24,1398,932],"safeInsets":[0,0,0,0]},
+    {"id":"autohide","screenFrame":[0,0,1470,956],"visibleFrame":[0,24,1470,932],"safeInsets":[0,0,0,0]},
+    {"id":"notch","screenFrame":[0,0,1470,956],"visibleFrame":[0,24,1470,932],"safeInsets":[0,0,74,0]},
+    {"id":"secondaryNegativeOrigin","screenFrame":[-1920,0,1920,1080],"visibleFrame":[-1920,0,1920,1055],"safeInsets":[0,0,0,0]}
+  ]
+}

@@ -1,0 +1,55 @@
+name: Grokoo
+options:
+  bundleIdPrefix: local.grokling
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    ENABLE_APP_SANDBOX: NO
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: NO
+    GENERATE_INFOPLIST_FILE: NO
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+
+targets:
+  Grokoo:
+    type: application
+    platform: macOS
+    sources:
+      - path: Grokoo
+        excludes:
+          - Resources
+      - path: Grokoo/Resources
+        buildPhase: resources
+        excludes:
+          - Info.plist
+          - AppIconSource.svg
+    settings:
+      base:
+        # Keep the original identifier to preserve settings and notification identity.
+        PRODUCT_BUNDLE_IDENTIFIER: local.grokling.app
+        PRODUCT_NAME: Grokoo
+        INFOPLIST_FILE: Grokoo/Resources/Info.plist
+    scheme:
+      testTargets:
+        - GrokooTests
+
+  GrokooTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: GrokooTests
+    dependencies:
+      - target: Grokoo
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: local.grokling.tests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGNING_ALLOWED: NO

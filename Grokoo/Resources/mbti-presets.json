@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "clamp": {
+    "actionWeight": { "min": 0.7, "max": 1.4 },
+    "speedMultiplier": { "min": 0.85, "max": 1.15 },
+    "dwellMultiplier": { "min": 0.8, "max": 1.25 },
+    "socialDistance": { "min": 40, "max": 68 }
+  },
+  "neutral": {
+    "moveWeight": 1.0,
+    "exploreWeight": 1.0,
+    "socialWeight": 1.0,
+    "restWeight": 1.0,
+    "speedMultiplier": 1.0,
+    "dwellMultiplier": 1.0,
+    "socialDistance": 52,
+    "decorationId": null
+  },
+  "presets": {
+    "ISTJ": {
+      "moveWeight": 0.85,
+      "exploreWeight": 0.77,
+      "socialWeight": 0.72,
+      "restWeight": 1.39,
+      "speedMultiplier": 1.0,
+      "dwellMultiplier": 1.21,
+      "socialDistance": 60,
+      "decorationId": null
+    },
+    "ISFJ": {
+      "moveWeight": 0.85,
+      "exploreWeight": 0.77,
+      "socialWeight": 0.88,
+      "restWeight": 1.25,
+      "speedMultiplier": 1.0,
+      "dwellMultiplier": 1.21,
+      "socialDistance": 60,
+      "decorationId": "nurse-cap"
+    },
+    "INFJ": {
+      "moveWeight": 0.85,
+      "exploreWeight": 1.08,
+      "socialWeight": 0.88,
+      "restWeight": 1.08,
+      "speedMultiplier": 1.0,
+      "dwellMultiplier": 1.21,
+      "socialDistance": 60,
+      "decorationId": null
+    },
+    "INTJ": {
+      "moveWeight": 0.85,
+      "exploreWeight": 1.08,
+      "socialWeight": 0.72,
+      "restWeight": 1.2,
+      "speedMultiplier": 1.0,
+      "dwellMultiplier": 1.21,
+      "socialDistance": 60,
+      "decorationId": null
+    },
+    "ISTP": {
+      "moveWeight": 0.99,
+      "exploreWeight": 0.98,
+      "socialWeight": 0.72,
+      "restWeight": 1.39,
+      "speedMultiplier": 0.9,
+      "dwellMultiplier": 0.99,
+      "socialDistance": 60,
+      "decorationId": "tiny-drill"
+    },
+    "ISFP": {
+      "moveWeight": 0.99,
+      "exploreWeight": 0.98,
+      "socialWeight": 0.88,
+      "restWeight": 1.25,
+      "speedMultiplier": 0.9,
+      "dwellMultiplier": 0.99,
+      "socialDistance": 60,
+      "decorationId": null
+    },
+    "INFP": {
+      "moveWeight": 0.99,
+      "exploreWeight": 1.38,
+      "socialWeight": 0.88,
+      "restWeight": 1.08,
+      "speedMultiplier": 0.9,
+      "dwellMultiplier": 0.99,
+      "socialDistance": 60,
+      "decorationId": "butterfly"
+    },
+    "INTP": {
+      "moveWeight": 0.99,
+      "exploreWeight": 1.38,
+      "socialWeight": 0.72,
+      "restWeight": 1.2,
+      "speedMultiplier": 0.9,
+      "dwellMultiplier": 0.99,
+      "socialDistance": 60,
+      "decorationId": null
+    },
+    "ESTP": {
+      "moveWeight": 1.21,
+      "exploreWeight": 0.98,
+      "socialWeight": 1.13,
+      "restWeight": 1.16,
+      "speedMultiplier": 1.0,
+      "dwellMultiplier": 0.85,
+      "socialDistance": 44,
+      "decorationId": null
+    },
+    "ESFP": {
+      "moveWeight": 1.21,
+      "exploreWeight": 0.98,
+      "socialWeight": 1.38,
+      "restWeight": 1.04,
+      "speedMultiplier": 1.0,
+      "dwellMultiplier": 0.85,
+      "socialDistance": 44,
+      "decorationId": null
+    },
+    "ENFP": {
+      "moveWeight": 1.21,
+      "exploreWeight": 1.38,
+      "socialWeight": 1.38,
+      "restWeight": 0.9,
+      "speedMultiplier": 1.0,
+      "dwellMultiplier": 0.85,
+      "socialDistance": 44,
+      "decorationId": null
+    },
+    "ENTP": {
+      "moveWeight": 1.21,
+      "exploreWeight": 1.38,
+      "socialWeight": 1.13,
+      "restWeight": 1.0,
+      "speedMultiplier": 1.0,
+      "dwellMultiplier": 0.85,
+      "socialDistance": 44,
+      "decorationId": "bent-brow"
+    },
+    "ESTJ": {
+      "moveWeight": 1.04,
+      "exploreWeight": 0.77,
+      "socialWeight": 1.13,
+      "restWeight": 1.16,
+      "speedMultiplier": 1.1,
+      "dwellMultiplier": 1.04,
+      "socialDistance": 44,
+      "decorationId": null
+    },
+    "ESFJ": {
+      "moveWeight": 1.04,
+      "exploreWeight": 0.77,
+      "socialWeight": 1.38,
+      "restWeight": 1.04,
+      "speedMultiplier": 1.1,
+      "dwellMultiplier": 1.04,
+      "socialDistance": 44,
+      "decorationId": null
+    },
+    "ENFJ": {
+      "moveWeight": 1.04,
+      "exploreWeight": 1.08,
+      "socialWeight": 1.38,
+      "restWeight": 0.9,
+      "speedMultiplier": 1.1,
+      "dwellMultiplier": 1.04,
+      "socialDistance": 44,
+      "decorationId": null
+    },
+    "ENTJ": {
+      "moveWeight": 1.04,
+      "exploreWeight": 1.08,
+      "socialWeight": 1.13,
+      "restWeight": 1.0,
+      "speedMultiplier": 1.1,
+      "dwellMultiplier": 1.04,
+      "socialDistance": 44,
+      "decorationId": null
+    }
+  }
+}
