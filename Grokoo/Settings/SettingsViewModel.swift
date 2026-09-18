@@ -10,6 +10,8 @@ enum SettingsKeyboardCommand {
 @MainActor
 final class SettingsViewModel: ObservableObject {
     @Published private(set) var bots: [SettingsBot] = []
+    @Published private(set) var dockItems: [SettingsDockItem] = []
+    @Published private(set) var dockEnabledIDs: Set<String> = []
     @Published private(set) var connectionState: SettingsConnectionState = .connecting
     @Published private(set) var visibilityLimitReached = false
     @Published private(set) var accessibilityMessage = ""
@@ -17,6 +19,7 @@ final class SettingsViewModel: ObservableObject {
     @Published private(set) var keyboardFocusRequest: UInt64 = 0
     let keyboardCommands = PassthroughSubject<SettingsKeyboardCommand, Never>()
     @Published var keyboardFocusedControl: SettingsControl?
+    @Published var dockErrorMessage: String?
     private final class WeakKeyboardControl {
         weak var value: NSControl?
         init(_ value: NSControl) { self.value = value }
@@ -29,11 +32,15 @@ final class SettingsViewModel: ObservableObject {
     var onOpenNotificationSettings: (() -> Void)?
     private var roster: [SettingsBot] = []
     private var configurationsCancellable: AnyCancellable?
+    private var dockCancellable: AnyCancellable?
 
     init(store: SettingsStore) {
         self.store = store
         configurationsCancellable = store.$configurations.sink { [weak self] configurations in
             self?.refreshOrder(configurations: configurations)
+        }
+        dockCancellable = store.$dockEnabledIDs.sink { [weak self] enabledIDs in
+            self?.dockEnabledIDs = enabledIDs
         }
     }
 
@@ -53,6 +60,19 @@ final class SettingsViewModel: ObservableObject {
         } else {
             announce("\(name(for: botId)) 已\(isVisible ? "显示" : "隐藏")。已显示 \(visibleCount) 只桌宠。")
         }
+    }
+
+    func updateDockItems(_ items: [SettingsDockItem]) {
+        var seen = Set<String>()
+        let uniqueItems = items.filter { seen.insert($0.id).inserted }
+        if dockItems != uniqueItems { dockItems = uniqueItems }
+    }
+
+    func setDockEnabled(_ enabled: Bool, for itemID: String) {
+        guard let item = dockItems.first(where: { $0.id == itemID }) else { return }
+        dockErrorMessage = nil
+        store.setDockEnabled(enabled, for: itemID)
+        announce("\(item.name) 的 Dock 入口已\(enabled ? "开启" : "关闭")。")
     }
 
     func setMBTI(_ mbti: MBTIType?, for botId: BotID) {
@@ -79,6 +99,7 @@ final class SettingsViewModel: ObservableObject {
             if configuration.globalOrder > 0 { controls.append(.moveUp(bot.id)) }
             if configuration.globalOrder < bots.count - 1 { controls.append(.moveDown(bot.id)) }
         }
+        controls += dockItems.map { .dock($0.id) }
         return controls
     }
 
@@ -108,6 +129,9 @@ final class SettingsViewModel: ObservableObject {
             case .visibility(let id):
                 guard let configuration = store.configuration(for: id) else { return false }
                 setVisibility(!configuration.isVisible, for: id)
+            case .dock(let id):
+                guard dockItems.contains(where: { $0.id == id }) else { return false }
+                setDockEnabled(!dockEnabledIDs.contains(id), for: id)
             case .moveUp(let id):
                 move(botId: id, delta: -1)
                 if !keyboardOrder.contains(control) { keyboardFocusedControl = .moveDown(id) }

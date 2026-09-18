@@ -62,8 +62,29 @@ struct BotRuntime: Equatable, Sendable {
 
 struct GroupRuntime: Equatable, Sendable, Identifiable {
     let id: GroupID
+    var name: String
     var memberIds: [BotID]
-    var isRunning: Bool
+    var runtime: BotRuntime
+
+    init(id: GroupID, name: String? = nil, memberIds: [BotID], runtime: BotRuntime) {
+        self.id = id
+        self.name = name ?? id
+        self.memberIds = memberIds
+        self.runtime = runtime
+    }
+
+    init(id: GroupID, memberIds: [BotID], isRunning: Bool) {
+        self.init(id: id, memberIds: memberIds, runtime: BotRuntime(isRunning: isRunning))
+    }
+
+    /// Preserve the desktop group barrier's running-or-thinking contract.
+    var isRunning: Bool {
+        get { runtime.isRunning || runtime.isThinking }
+        set {
+            runtime.isRunning = newValue
+            if !newValue { runtime.isThinking = false }
+        }
+    }
 }
 
 enum PresenceState: String, Codable, CaseIterable, Equatable, Sendable {

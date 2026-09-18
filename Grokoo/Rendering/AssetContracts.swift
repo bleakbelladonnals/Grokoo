@@ -28,6 +28,8 @@ enum AssetContract {
     static let freeBodySize: CGFloat = 32
     static let workspaceBodySize: CGFloat = 42
     static let maximumVisibleExtent: CGFloat = 52
+    /// Transparent drawing room from the approved kit, never a hit region.
+    static let motionContainerMultiplier: CGFloat = 2.4
     static func isSupportedBodySize(_ size: CGFloat) -> Bool { size == freeBodySize || size == workspaceBodySize }
 }
 
@@ -39,6 +41,6 @@ struct MotionProfileMap: Codable, Equatable, Sendable {
     let action: MotionActionID
     let profileKey: String
     static let reserved = PresenceState.allCases.map {
-        MotionProfileMap(action: MotionActionID(rawValue: $0.rawValue)!, profileKey: "state.\($0.rawValue).pending-approved-asset")
+        MotionProfileMap(action: MotionActionID(rawValue: $0.rawValue)!, profileKey: "native.\($0.rawValue).kit-1.0.0")
     }
 }

@@ -19,3 +19,10 @@ Grokoo includes Swift adaptations of portions of the following MIT-licensed proj
 - Adapted files: `Grokoo/Rendering/BloubShapeEngine.swift`, `FaceLayer.swift`
 - Adaptations cover radial outlines, 64-point sampling, shape interpolation and eye fitting, implemented with Swift and CoreGraphics.
 - [MIT license and copyright notice](ThirdParty/Licenses/bloub-MIT.txt)
+
+## Grokoo 1.1 native motion adaptation
+
+- Input: the approved `grokling-animation-kit` 1.0.0 handoff dated 2026-09-18.
+- `NativeRestSampler.swift` and the resting geometry/eye-fit constants in `NativeMotionData.swift` adapt the handoff's Bloub `shape`, `states`, `expressions`, `face` and `eyefit` modules under the Bloub MIT notice above.
+- The handoff's `official-motion.ts`, `official-trails.ts`, `status-orb.ts` and `status-shapes.ts` supply the approved Working/Done and Thinking/Blocked reference geometry and timing. Their original source and implementation boundaries remain recorded in the handoff's `SOURCE-PROVENANCE.md`; these are project adaptations of publicly observed drawing behavior, not an officially released xAI SDK or an assertion of xAI open-source licensing.
+- Native Swift paths, pose sampling and front/back ribbons replace the Web rendering entry. No Web runtime or source article script is bundled in the application.

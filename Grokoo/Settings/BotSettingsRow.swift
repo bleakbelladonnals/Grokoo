@@ -4,6 +4,7 @@ import SwiftUI
 enum SettingsControl: Hashable {
     case retry, notifications
     case visibility(BotID), mbti(BotID), moveUp(BotID), moveDown(BotID)
+    case dock(String)
 }
 
 struct BotSettingsRow: View {
@@ -47,6 +48,64 @@ struct BotSettingsRow: View {
     private func nativeControl(_ control: SettingsControl, configuration: PetConfiguration) -> some View {
         BotSettingsNativeControl(bot: bot, control: control, configuration: configuration, viewModel: viewModel)
             .settingsFocusRing(viewModel.keyboardFocusedControl == control)
+    }
+}
+
+struct DockSettingsRow: View {
+    let item: SettingsDockItem
+    @ObservedObject var viewModel: SettingsViewModel
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(item.name)
+                .lineLimit(1)
+                .help(item.name)
+                .accessibilityHidden(true)
+            Text(item.isGroup ? "群聊" : "Bot")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            Spacer(minLength: 4)
+            DockSettingsNativeSwitch(item: item, viewModel: viewModel)
+                .frame(width: 40, height: 28)
+                .settingsFocusRing(viewModel.keyboardFocusedControl == .dock(item.id))
+        }
+        .padding(.vertical, 6)
+        .accessibilityElement(children: .contain)
+    }
+}
+
+private struct DockSettingsNativeSwitch: NSViewRepresentable {
+    let item: SettingsDockItem
+    let viewModel: SettingsViewModel
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    func makeNSView(context: Context) -> SettingsFocusSwitch {
+        let toggle = SettingsFocusSwitch()
+        toggle.onFocus = { [weak viewModel] in viewModel?.keyboardFocusedControl = .dock(item.id) }
+        toggle.target = context.coordinator
+        toggle.action = #selector(Coordinator.performAction(_:))
+        viewModel.registerKeyboardControl(toggle, for: .dock(item.id))
+        return toggle
+    }
+
+    func updateNSView(_ toggle: SettingsFocusSwitch, context: Context) {
+        context.coordinator.parent = self
+        toggle.state = viewModel.dockEnabledIDs.contains(item.id) ? .on : .off
+        toggle.setAccessibilityIdentifier("settings.dock.\(item.id)")
+        toggle.setAccessibilityLabel("\(item.name)\(item.isGroup ? "群聊" : "")的 Dock 入口")
+        toggle.setAccessibilityHelp("开启后可从 Dock 打开此\(item.isGroup ? "群聊" : "Bot")；桌面显示独立设置。")
+    }
+
+    @MainActor
+    final class Coordinator: NSObject {
+        var parent: DockSettingsNativeSwitch
+        init(parent: DockSettingsNativeSwitch) { self.parent = parent }
+
+        @objc func performAction(_ sender: NSSwitch) {
+            parent.viewModel.setDockEnabled(sender.state == .on, for: parent.item.id)
+        }
     }
 }
 

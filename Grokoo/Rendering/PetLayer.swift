@@ -6,10 +6,16 @@ final class PetLayer: CALayer {
     static let decoratedSize = CGSize(width: 36, height: 36)
 
     let botId: BotID
-    let bodyShapeLayer = CAShapeLayer()
-    let faceLayer = FaceLayer()
-    let stateDecorationLayer = CAShapeLayer()
-    let mbtiDecorationLayer = DecorationLayer()
+    // Core Animation creates presentation copies frequently. Those copies already
+    // own copied sublayers and must not allocate a second, unused drawing tree.
+    private(set) lazy var bodyShapeLayer = CAShapeLayer()
+    private(set) lazy var faceLayer = FaceLayer()
+    private(set) lazy var stateDecorationLayer = CAShapeLayer()
+    private(set) lazy var mbtiDecorationLayer = DecorationLayer()
+    private(set) lazy var nativeMotionLayer = NativeMotionLayer()
+    private lazy var focusedDoneLayer = NativeMotionLayer()
+    private(set) var usesNativeMotion = false
+    private(set) var isDoneFocused = false
 
     private let shapeEngine = BloubShapeEngine()
     private(set) var shape: OfficialShape
@@ -31,6 +37,12 @@ final class PetLayer: CALayer {
         addSublayer(faceLayer)
         addSublayer(stateDecorationLayer)
         addSublayer(mbtiDecorationLayer)
+        nativeMotionLayer.position = CGPoint(x: 18, y: 18)
+        nativeMotionLayer.isHidden = true
+        addSublayer(nativeMotionLayer)
+        focusedDoneLayer.position = CGPoint(x: 18, y: 18)
+        focusedDoneLayer.opacity = 0
+        addSublayer(focusedDoneLayer)
         updateAppearance(shape: shape, color: color)
     }
 
@@ -56,14 +68,53 @@ final class PetLayer: CALayer {
         bodyShapeLayer.fillColor = color.cgColor
         faceLayer.configure(shape: shape, bodyColor: color.nsColor)
         faceLayer.setNeedsLayout()
-        mbtiDecorationLayer.configure(id: mbtiDecorationLayer.decorationID?.rawValue, shape: shape, contrastColor: color.nsColor.contrastingMonochrome)
+        setMBTIDecoration(mbtiDecorationLayer.decorationID?.rawValue)
     }
 
     func setMBTIDecoration(_ id: String?) {
         mbtiDecorationLayer.configure(id: id, shape: shape, contrastColor: color.nsColor.contrastingMonochrome)
+        if usesNativeMotion, !mbtiDecorationLayer.isHidden { mbtiDecorationLayer.isHidden = true }
+    }
+
+    func renderNativeMotion(_ frame: NativeMotionFrame) {
+        if !usesNativeMotion {
+            usesNativeMotion = true
+            bodyShapeLayer.isHidden = true
+            faceLayer.isHidden = true
+            stateDecorationLayer.isHidden = true
+            stateDecorationLayer.path = nil
+            mbtiDecorationLayer.isHidden = true
+            nativeMotionLayer.isHidden = false
+        }
+        nativeMotionLayer.apply(frame: frame, color: bodyShapeLayer.fillColor ?? color.cgColor, bodySize: Self.bodySize.width)
+    }
+
+    /// Crossfade state-local poses while the parent body/hit region stays fixed.
+    func focusDone(on frame: NativeMotionFrame?, duration: TimeInterval) {
+        isDoneFocused = frame != nil
+        if let frame {
+            let opacity = focusedDoneLayer.presentation()?.opacity ?? focusedDoneLayer.opacity
+            focusedDoneLayer.apply(frame: frame, color: bodyShapeLayer.fillColor ?? color.cgColor, bodySize: Self.bodySize.width)
+            focusedDoneLayer.opacity = opacity
+        }
+        for (layer, target) in [(nativeMotionLayer, frame == nil ? Float(1) : Float(0)),
+                                (focusedDoneLayer, frame == nil ? Float(0) : Float(1))] {
+            let from = layer.presentation()?.opacity ?? layer.opacity
+            layer.removeAnimation(forKey: "done.focus")
+            layer.opacity = target
+            if duration > 0 {
+                let fade = CABasicAnimation(keyPath: "opacity")
+                fade.fromValue = from
+                fade.toValue = target
+                fade.duration = duration
+                fade.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                layer.add(fade, forKey: "done.focus")
+            }
+        }
     }
 
     func showStateMarker(_ state: PresenceState) {
+        guard !usesNativeMotion else { stateDecorationLayer.path = nil; return }
         stateDecorationLayer.path = nil
         stateDecorationLayer.opacity = 1
         stateDecorationLayer.fillColor = nil

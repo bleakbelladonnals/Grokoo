@@ -9,6 +9,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let coordinator = AppAssembly.makeDefault()
         self.coordinator = coordinator
         coordinator.start()
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["GROKOO_MOTION_EXPERIENCE"] == "1" {
+            coordinator.openMotionExperience()
+        }
+        #endif
         if (ProcessInfo.processInfo.environment["GROKOO_ACCEPTANCE_OPEN_SETTINGS"] ?? ProcessInfo.processInfo.environment["GROKLING_ACCEPTANCE_OPEN_SETTINGS"]) == "1" {
             coordinator.openSettings()
         }

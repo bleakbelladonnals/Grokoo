@@ -49,10 +49,13 @@ xcodebuild \
 
 RELEASE_APP="$DERIVED/Build/Products/Release/Grokoo.app"
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$RELEASE_APP/Contents/Info.plist")" == "1.1" ]]
-[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$RELEASE_APP/Contents/Info.plist")" == "11" ]]
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$RELEASE_APP/Contents/Info.plist")" == "12" ]]
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :LSUIElement' "$RELEASE_APP/Contents/Info.plist")" == "true" ]]
 /usr/bin/lipo "$RELEASE_APP/Contents/MacOS/Grokoo" -verify_arch arm64 x86_64
-/usr/bin/codesign --verify --strict "$RELEASE_APP"
+/usr/bin/codesign --verify --deep --strict "$RELEASE_APP"
+DOCK_HELPER="$RELEASE_APP/Contents/Helpers/GrokooDockItem.app"
+/usr/bin/lipo "$DOCK_HELPER/Contents/MacOS/GrokooDockItem" -verify_arch arm64 x86_64
+/usr/bin/codesign --verify --strict "$DOCK_HELPER"
 
 xcodebuild -project Grokoo.xcodeproj -scheme Grokoo -configuration Release -showBuildSettings > "$EVIDENCE/build-settings-release.txt"
 rg '^\s*ENABLE_APP_SANDBOX = NO$' "$EVIDENCE/build-settings-release.txt" >/dev/null
@@ -61,13 +64,13 @@ if rg '^\s*(DEVELOPMENT_TEAM|CODE_SIGN_IDENTITY) = (Apple Development|Developer 
   exit 1
 fi
 
-if rg -n --glob '*.swift' '\b(prompt|responseBody|messageBody|transcriptBody)\b' Grokoo/Presence Grokoo/Rendering Grokoo/Motion Grokoo/Workstation Grokoo/Personality > "$EVIDENCE/privacy-source-scan.txt"; then
+if rg -n --glob '*.swift' '\b(prompt|responseBody|messageBody|transcriptBody)\b' Grokoo/Presence Grokoo/Rendering Grokoo/Motion Grokoo/Workstation Grokoo/Personality Grokoo/Dock GrokooDockItem > "$EVIDENCE/privacy-source-scan.txt"; then
   print -u2 'Forbidden正文字段 entered Presence/rendering pipeline.'
   exit 1
 fi
 
-if rg -n --glob '*.swift' '\b(WKWebView|SpriteKit|SceneKit|SKPhysicsBody|Process)\b' Grokoo > "$EVIDENCE/forbidden-architecture-scan.txt"; then
-  print -u2 'Forbidden web/physics/helper-process architecture detected.'
+if rg -n --glob '*.swift' '\b(WKWebView|SpriteKit|SceneKit|SKPhysicsBody)\b' Grokoo GrokooDockItem > "$EVIDENCE/forbidden-architecture-scan.txt"; then
+  print -u2 'Forbidden web/physics architecture detected.'
   exit 1
 fi
 
@@ -90,10 +93,10 @@ fi
   print "official_color_count=$(rg -o 'case (black|brown|red|orange|yellow|green|cyan|blue|violet|magenta|gray)' Grokoo/Rendering/OfficialAppearance.swift | wc -l | tr -d ' ')"
   print "decoration_asset_count=$(find Grokoo/Resources/MBTIDecorations -name '*.svg' | wc -l | tr -d ' ')"
   print "app_icon_png_count=$(find Grokoo/Resources/Assets.xcassets/AppIcon.appiconset -name '*.png' | wc -l | tr -d ' ')"
-  print "menu_template_svg_count=$(find Grokoo/Resources/Assets.xcassets/MenuBarIcon.imageset -name '*.svg' | wc -l | tr -d ' ')"
+  print "menu_template_svg_count=$(find Grokoo/Resources -maxdepth 1 -name 'MenuBarIconSource.svg' | wc -l | tr -d ' ')"
 } > "$EVIDENCE/resource-counts.txt"
 
-find Grokoo GrokooTests ThirdParty project.yml scripts README.md THIRD_PARTY_NOTICES.md -type f -not -path '*/xcuserdata/*' -print0 \
+find Grokoo GrokooDockItem GrokooTests ThirdParty project.yml scripts README.md THIRD_PARTY_NOTICES.md -type f -not -path '*/xcuserdata/*' -print0 \
   | sort -z \
   | xargs -0 shasum -a 256 > "$EVIDENCE/final-source-sha256.txt"
 

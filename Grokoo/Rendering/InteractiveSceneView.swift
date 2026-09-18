@@ -52,23 +52,39 @@ final class InteractiveSceneView: NSView {
 
     func updateTargets(_ targets: [SceneInteractionTarget]) {
         guard self.targets != targets else { return }
+        let previousTargets = self.targets
+        let orderChanged = previousTargets.map(\.botID) != targets.map(\.botID)
         self.targets = targets
-        let wanted = Set(targets.map(\.botID))
-        for id in Array(botButtons.keys) where !wanted.contains(id) {
-            botButtons.removeValue(forKey: id)?.removeFromSuperview()
-            if keyboardBotID == id { keyboardBotID = nil }
+        if orderChanged {
+            let wanted = Set(targets.map(\.botID))
+            for id in Array(botButtons.keys) where !wanted.contains(id) {
+                botButtons.removeValue(forKey: id)?.removeFromSuperview()
+                if keyboardBotID == id { keyboardBotID = nil }
+            }
         }
         for target in targets {
             let button = botButtons[target.botID] ?? makeBotButton(id: target.botID)
-            button.frame = target.frame
-            button.setAccessibilityLabel("\(target.name)，\(Self.statusName(target.state))")
-            button.setAccessibilityHelp(target.state == .done ? "按空格显示收起操作；按删除键收起。" : "当前任务状态")
-            button.toolTip = "\(target.name) · \(Self.statusName(target.state))"
+            if button.frame != target.frame {
+                if button.frame.size == target.frame.size {
+                    button.setFrameOrigin(target.frame.origin)
+                } else {
+                    button.frame = target.frame
+                }
+            }
+            // Patrol changes geometry every frame, but not the control's identity or status.
+            let previous = previousTargets.first { $0.botID == target.botID }
+            if previous?.name != target.name || previous?.state != target.state {
+                button.setAccessibilityLabel("\(target.name)，\(Self.statusName(target.state))")
+                button.setAccessibilityHelp(target.state == .done ? "按空格显示收起操作；按删除键收起。" : "当前任务状态")
+                button.toolTip = "\(target.name) · \(Self.statusName(target.state))"
+            }
         }
         if let highlightedBotID, !targets.contains(where: { $0.botID == highlightedBotID && $0.state == .done }) {
-            self.highlightedBotID = nil
+            setHighlight(nil)
         }
-        layoutCompletionControls()
+        if orderChanged || previousTargets.filter({ $0.state == .done }) != targets.filter({ $0.state == .done }) {
+            layoutCompletionControls()
+        }
     }
 
     /// Called by the window's mouse monitor, including while it is passing events through.
@@ -186,7 +202,10 @@ final class InteractiveSceneView: NSView {
         var controls: [NSView] = targets.compactMap { botButtons[$0.botID] }
         if !dismissButton.isHidden { controls.append(dismissButton) }
         if !dismissAllButton.isHidden { controls.append(dismissAllButton) }
-        for (index, control) in controls.enumerated() { control.nextKeyView = controls[(index + 1) % controls.count] }
+        for (index, control) in controls.enumerated() {
+            let next = controls[(index + 1) % controls.count]
+            if control.nextKeyView !== next { control.nextKeyView = next }
+        }
     }
 
     private func activateKeyboardFocus(on control: NSView) {

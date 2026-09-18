@@ -24,7 +24,14 @@ final class AppCoordinator {
     private let initialConnectionTimeout: Duration
     private var timeoutTask: Task<Void, Never>?
     private var menuBarController: MenuBarController?
+    #if DEBUG
+    private lazy var motionExperienceWindow = MotionExperienceWindowController()
+    #endif
     private var settingsCancellable: AnyCancellable?
+    private var dockSettingsCancellable: AnyCancellable?
+    private let dockService: (any DockServicing)?
+    private var dockAccessibilityObserver: NSObjectProtocol?
+    private var dockRevision: UInt64 = 0
     private var currentIdentities: [BotIdentity] = []
     private var currentRoster: RosterSnapshot = .empty
     private let completionStore: CompletionLedgerStore
@@ -59,7 +66,8 @@ final class AppCoordinator {
         completionStore: CompletionLedgerStore = CompletionLedgerStore(),
         notificationReceiptStore: NotificationReceiptStore = NotificationReceiptStore(),
         notificationHandler: @escaping (PresenceNotification) -> Void = { _ in },
-        notificationService: MacOSNotificationService? = nil
+        notificationService: MacOSNotificationService? = nil,
+        dockService: (any DockServicing)? = nil
     ) {
         self.settingsStore = settingsStore
         self.settingsWindowController = settingsWindowController
@@ -74,14 +82,33 @@ final class AppCoordinator {
         notificationQueue = NotificationEventQueue(receipts: notificationReceiptStore.load())
         self.notificationHandler = notificationHandler
         self.notificationService = notificationService
+        self.dockService = dockService
         settingsCancellable = settingsStore.$configurations.sink { [weak self] configurations in
             guard let self, !self.isMergingRoster else { return }
             self.synchronizeScene(configurations: configurations)
+        }
+        dockSettingsCancellable = settingsStore.$dockEnabledIDs.dropFirst().sink { [weak self] enabledIDs in
+            // Published values arrive before the property's storage is updated.
+            self?.renderCurrentPresence(dockEnabledIDs: enabledIDs)
         }
     }
 
     func start() {
         guard menuBarController == nil, !isShutdown else { return }
+
+        dockService?.onDisableItem = { [weak self] id in self?.settingsStore.setDockEnabled(false, for: id) }
+        (dockService as? DockController)?.onError = { [weak self] message in
+            self?.settingsWindowController.viewModel.dockErrorMessage = message
+        }
+        dockService?.onAcknowledgeItem = { [weak self] id in
+            self?.acknowledgeDone(botId: Self.presenceID(forDockID: id))
+        }
+        dockAccessibilityObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
+            object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.renderCurrentPresence() }
+        }
 
         notificationService?.onAuthorizationChange = { [weak self] status in
             self?.settingsWindowController.viewModel.updateNotificationPermission(status)
@@ -101,7 +128,8 @@ final class AppCoordinator {
             onQuit: { [weak self] in self?.quit() },
             onFocusWorkspace: { [weak self] in self?.focusWorkspace() },
             onAcknowledgeDone: { [weak self] id in self?.acknowledgeDone(botId: id) },
-            onAcknowledgeAllDone: { [weak self] in self?.acknowledgeAllDone() }
+            onAcknowledgeAllDone: { [weak self] in self?.acknowledgeAllDone() },
+            onOpenMotionExperience: { [weak self] in self?.openMotionExperience() }
         )
         petScene.configureCompletionActions(
             onAcknowledge: { [weak self] id in self?.acknowledgeDone(botId: id) },
@@ -185,6 +213,11 @@ final class AppCoordinator {
     }
     func openSettings() { settingsWindowController.open() }
     func showMenuForAcceptance() { menuBarController?.showForAcceptance() }
+    func openMotionExperience() {
+        #if DEBUG
+        motionExperienceWindow.open()
+        #endif
+    }
 
     func retryConnection() {
         settingsWindowController.viewModel.update(
@@ -257,7 +290,18 @@ final class AppCoordinator {
             presenceReducer.remove(botId: botId)
             presenceByBot.removeValue(forKey: botId)
         }
+        for groupID in Set(currentRoster.groups.keys).subtracting(roster.groups.keys) {
+            let id = Self.presenceID(forDockID: "group:" + groupID)
+            presenceReducer.remove(botId: id)
+            presenceByBot.removeValue(forKey: id)
+        }
         currentRoster = roster
+        settingsWindowController.viewModel.updateDockItems(
+            roster.orderedBots.map { SettingsDockItem(id: "bot:" + $0.id, name: $0.name, isGroup: false) }
+            + roster.groups.values.sorted { $0.id < $1.id }.map {
+                SettingsDockItem(id: "group:" + $0.id, name: $0.name, isGroup: true)
+            }
+        )
         if didResolveInitialConnection {
             updateRoster(roster.orderedBots.map(\.identity))
         }
@@ -287,6 +331,16 @@ final class AppCoordinator {
         notificationService?.stop()
         settingsCancellable?.cancel()
         settingsCancellable = nil
+        dockSettingsCancellable?.cancel()
+        dockSettingsCancellable = nil
+        if let dockAccessibilityObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(dockAccessibilityObserver)
+        }
+        dockAccessibilityObserver = nil
+        dockService?.onDisableItem = nil
+        (dockService as? DockController)?.onError = nil
+        dockService?.onAcknowledgeItem = nil
+        dockService?.shutdown()
         completionStore.save(presenceReducer.completionLedger)
         presenceReducer.resetRuntime()
         groupActivityTracker.reset()
@@ -294,6 +348,9 @@ final class AppCoordinator {
         synchronizedSceneSignature = nil
         renderedGroupSignature = nil
         settingsWindowController.shutdown()
+        #if DEBUG
+        motionExperienceWindow.shutdown()
+        #endif
         gateway.shutdown()
         petScene.shutdown()
         menuBarController?.shutdown()
@@ -318,6 +375,7 @@ final class AppCoordinator {
     private func handleWillSleep() {
         guard !isSystemSleeping else { return }
         isSystemSleeping = true
+        dockService?.suspend()
         petScene.hideAll()
         gateway.suspend()
     }
@@ -331,6 +389,7 @@ final class AppCoordinator {
         }
         deferredMainScreenGeometry = nil
         synchronizeScene()
+        dockService?.resume()
         if arePetsGloballyVisible {
             petScene.showAll()
         }
@@ -361,6 +420,10 @@ final class AppCoordinator {
             configurations: configurations
         )
         if synchronizedSceneSignature != signature {
+            let previousIDs = Set(synchronizedSceneSignature?.identities.map(\.id) ?? [])
+            for identity in identities where !previousIDs.contains(identity.id) {
+                presenceByBot.removeValue(forKey: identity.id)
+            }
             petScene.synchronize(identities: identities, configurations: configurations)
             synchronizedSceneSignature = signature
             // A workstation/configuration change can move an otherwise unchanged
@@ -370,18 +433,23 @@ final class AppCoordinator {
         renderCurrentPresence(visibleIDs: Set(configurations.map(\.botId)), configurations: configurations)
     }
 
-    private func renderCurrentPresence(visibleIDs suppliedVisibleIDs: Set<BotID>? = nil, configurations suppliedConfigurations: [PetConfiguration]? = nil) {
+    private func renderCurrentPresence(visibleIDs suppliedVisibleIDs: Set<BotID>? = nil, configurations suppliedConfigurations: [PetConfiguration]? = nil, dockEnabledIDs suppliedDockIDs: Set<String>? = nil) {
         guard !isShutdown, !isSystemSleeping else { return }
         let configurations = suppliedConfigurations ?? settingsStore.configurations
         let visibleIDs = suppliedVisibleIDs
             ?? Set(configurations.filter(\.isVisible).map(\.botId))
-        let noLongerVisible = Set(presenceByBot.keys).subtracting(visibleIDs)
+        let dockIDs = suppliedDockIDs ?? settingsStore.dockEnabledIDs
+        let dockBotIDs = Set(currentRoster.bots.keys.filter { dockIDs.contains("bot:" + $0) })
+        let observedBotIDs = visibleIDs.union(dockBotIDs)
+        let dockGroups = currentRoster.groups.values.filter { dockIDs.contains("group:" + $0.id) }
+        let observedIDs = observedBotIDs.union(dockGroups.map { Self.presenceID(forDockID: "group:" + $0.id) })
+        let noLongerVisible = Set(presenceByBot.keys).subtracting(observedIDs)
         for botId in noLongerVisible {
             presenceByBot.removeValue(forKey: botId)
         }
         var currentStates: [BotID: PresenceState] = [:]
 
-        for botId in visibleIDs.sorted() {
+        for botId in observedBotIDs.sorted() {
             guard let bot = currentRoster.bots[botId] else { continue }
             let state = presenceReducer.reduce(
                 botId: botId,
@@ -389,18 +457,26 @@ final class AppCoordinator {
                 gatewayAvailable: gatewayAvailable
             )
             if state.isActive { notificationQueue.discardDone(botId: botId) }
-            consumeNotificationTransition(botId: botId, botName: bot.identity.name)
+            if visibleIDs.contains(botId) {
+                consumeNotificationTransition(botId: botId, botName: bot.identity.name)
+            }
             currentStates[botId] = state
             if presenceByBot[botId] != state {
-                if arePetsGloballyVisible {
+                if arePetsGloballyVisible, visibleIDs.contains(botId) {
                     petScene.updatePresence(state, botId: botId, revision: nextSceneRevision())
                 }
                 completionStore.save(presenceReducer.completionLedger)
             }
         }
+        for group in dockGroups {
+            let id = Self.presenceID(forDockID: "group:" + group.id)
+            currentStates[id] = presenceReducer.reduce(botId: id, runtime: group.runtime, gatewayAvailable: gatewayAvailable)
+        }
+        if currentStates != presenceByBot { completionStore.save(presenceReducer.completionLedger) }
         presenceByBot = currentStates
+        let desktopStates = currentStates.filter { visibleIDs.contains($0.key) }
         let pendingIDs = Set(visibleIDs.filter { presenceReducer.completionLedger.pending(for: $0) != nil })
-        currentAggregate = PresenceAggregate.make(states: currentStates, gatewayAvailable: gatewayAvailable, pendingDoneBotIDs: pendingIDs)
+        currentAggregate = PresenceAggregate.make(states: desktopStates, gatewayAvailable: gatewayAvailable, pendingDoneBotIDs: pendingIDs)
         menuBarController?.update(aggregate: currentAggregate)
         menuBarController?.updatePendingDone(bots: configurations
             .sorted { $0.globalOrder < $1.globalOrder }
@@ -430,6 +506,48 @@ final class AppCoordinator {
             )
             renderedGroupSignature = groupSignature
         }
+        synchronizeDock(enabledIDs: dockIDs, states: currentStates)
+    }
+
+    private static func presenceID(forDockID id: String) -> BotID {
+        if id.hasPrefix("bot:") { return String(id.dropFirst(4)) }
+        return "grokoo.dock." + id
+    }
+
+    private func synchronizeDock(enabledIDs: Set<String>, states: [BotID: PresenceState]) {
+        guard let dockService else { return }
+        dockRevision &+= 1
+        let isFixture = gateway is AcceptanceFixtureGatewayRuntime
+        func route(_ id: String) -> URL {
+            GrokBotNotificationRoute.url(for: isFixture ? .mainWindow : .bot(id))
+        }
+        var items = currentRoster.orderedBots.compactMap { bot -> DockItemSnapshot? in
+            let id = "bot:" + bot.id
+            guard enabledIDs.contains(id) else { return nil }
+            return DockItemSnapshot(
+                id: id, kind: .bot, displayName: bot.name, shape: bot.shape, color: bot.color,
+                state: DockPresentationState(rawValue: (states[bot.id] ?? .offline).rawValue)!,
+                revision: dockRevision, routeURL: route(bot.id), fallbackURL: GrokBotNotificationRoute.mainWindowURL
+            )
+        }
+        for group in currentRoster.groups.values.sorted(by: { $0.id < $1.id }) {
+            let id = "group:" + group.id
+            guard enabledIDs.contains(id) else { continue }
+            let members = group.memberIds.compactMap { memberID -> DockMemberAppearance? in
+                guard let bot = currentRoster.bots[memberID] else { return nil }
+                return DockMemberAppearance(id: memberID, shape: bot.shape, color: bot.color)
+            }
+            items.append(DockItemSnapshot(
+                id: id, kind: .group, displayName: group.name,
+                shape: members.first?.shape ?? .blob, color: members.first?.color ?? .blue,
+                members: members,
+                state: DockPresentationState(rawValue: (states[Self.presenceID(forDockID: id)] ?? .offline).rawValue)!,
+                revision: dockRevision, routeURL: route(group.id), fallbackURL: GrokBotNotificationRoute.mainWindowURL
+            ))
+        }
+        let reducesMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+            || (gateway as? AcceptanceFixtureGatewayRuntime)?.fixture.reducedMotion == true
+        dockService.synchronize(items: items, reducedMotion: reducesMotion)
     }
 
     private func nextSceneRevision() -> UInt64 {

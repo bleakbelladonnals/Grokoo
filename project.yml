@@ -31,15 +31,43 @@ targets:
         excludes:
           - Info.plist
           - AppIconSource.svg
+          - MenuBarIconSource.svg
     settings:
       base:
         # Keep the original identifier to preserve settings and notification identity.
         PRODUCT_BUNDLE_IDENTIFIER: local.grokling.app
         PRODUCT_NAME: Grokoo
         INFOPLIST_FILE: Grokoo/Resources/Info.plist
+    dependencies:
+      - target: GrokooDockItem
+        link: false
+        embed: true
+        codeSign: true
+        copy:
+          destination: wrapper
+          subpath: Contents/Helpers
     scheme:
       testTargets:
         - GrokooTests
+
+  GrokooDockItem:
+    type: application
+    platform: macOS
+    sources:
+      - path: GrokooDockItem
+        excludes:
+          - Info.plist
+      - path: Grokoo/Dock/DockModels.swift
+      - path: Grokoo/Rendering/OfficialAppearance.swift
+      - path: Grokoo/Rendering/BloubShapeEngine.swift
+      - path: Grokoo/Resources/Assets.xcassets
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: local.grokling.dock-item
+        PRODUCT_NAME: GrokooDockItem
+        INFOPLIST_FILE: GrokooDockItem/Info.plist
+        SKIP_INSTALL: YES
 
   GrokooTests:
     type: bundle.unit-test

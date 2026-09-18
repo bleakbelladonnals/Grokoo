@@ -33,6 +33,12 @@ struct SettingsBot: Identifiable, Equatable, Sendable {
     let name: String
 }
 
+struct SettingsDockItem: Identifiable, Equatable, Sendable {
+    let id: String
+    let name: String
+    let isGroup: Bool
+}
+
 enum SettingsConnectionState: Equatable, Sendable {
     case connecting, connected, timedOut, keychainDenied, noBots, offline
 

@@ -25,6 +25,7 @@ final class SettingsStore: ObservableObject {
     static let defaultStorageKey = "grokling.settings.v1"
 
     @Published private(set) var configurations: [PetConfiguration]
+    @Published private(set) var dockEnabledIDs: Set<String>
     private let defaults: UserDefaults
     private let storageKey: String
     private(set) var hasPersistedConfiguration: Bool
@@ -32,6 +33,7 @@ final class SettingsStore: ObservableObject {
     init(defaults: UserDefaults = .standard, storageKey: String = SettingsStore.defaultStorageKey) {
         self.defaults = defaults
         self.storageKey = storageKey
+        dockEnabledIDs = Set(defaults.stringArray(forKey: storageKey + ".dock") ?? [])
         if let data = defaults.data(forKey: storageKey),
            let snapshot = try? JSONDecoder().decode(SettingsSnapshot.self, from: data),
            snapshot.schemaVersion == SettingsSnapshot.currentSchemaVersion {
@@ -84,6 +86,15 @@ final class SettingsStore: ObservableObject {
 
     func setMBTI(_ mbti: MBTIType?, for botId: BotID) { update(botId) { $0.mbti = mbti } }
 
+    func setDockEnabled(_ enabled: Bool, for itemID: String) {
+        var next = dockEnabledIDs
+        if enabled { next.insert(itemID) }
+        else { next.remove(itemID) }
+        guard next != dockEnabledIDs else { return }
+        dockEnabledIDs = next
+        defaults.set(next.sorted(), forKey: storageKey + ".dock")
+    }
+
     func move(botId: BotID, to destination: Int) {
         var ordered = configurations.sorted(by: Self.order)
         guard let source = ordered.firstIndex(where: { $0.botId == botId }), !ordered.isEmpty else { return }
@@ -104,7 +115,9 @@ final class SettingsStore: ObservableObject {
 
     func reset() {
         defaults.removeObject(forKey: storageKey)
+        defaults.removeObject(forKey: storageKey + ".dock")
         configurations = []
+        dockEnabledIDs = []
         hasPersistedConfiguration = false
     }
 

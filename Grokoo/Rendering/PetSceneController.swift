@@ -37,6 +37,9 @@ final class PetSceneController: PetSceneServicing {
     private var pointerMonitor: Any?
     private var localPointerMonitor: Any?
     private var interactionTimer: Timer?
+    private var motionClocks: [BotID: PresenceMotionClock] = [:]
+    private let motionSampler = NativeMotionSampler()
+    private var lastStaticMotion: [BotID: PresenceState] = [:]
     private var accessibilityObserver: NSObjectProtocol?
     private(set) var reducesMotion = false
     private let animationCoordinator = AnimationCoordinator()
@@ -90,6 +93,10 @@ final class PetSceneController: PetSceneServicing {
             transitionSchedule.release(botID: id)
             idleMotionController.stop(botId: id)
             petLayers.removeValue(forKey: id)?.removeFromSuperlayer()
+            motionClocks.removeValue(forKey: id)
+            lastStaticMotion.removeValue(forKey: id)
+            motionSampler.reset(instanceID: id)
+            motionSampler.reset(instanceID: id + ".focus")
             presenceByBot.removeValue(forKey: id)
             freePositions.removeValue(forKey: id)
             groupAssignments.removeValue(forKey: id)
@@ -104,11 +111,16 @@ final class PetSceneController: PetSceneServicing {
                 pet.position = defaultFreePosition(index: index)
                 freePositions[identity.id] = pet.position
                 petLayers[identity.id] = pet
+                let occupied = Set(motionClocks.values.map(\.phaseSlot))
+                let slot = (0..<Self.maximumPetCount).first { !occupied.contains($0) } ?? 0
+                motionClocks[identity.id] = PresenceMotionClock(phaseSlot: slot)
                 sceneLayer.addSublayer(pet)
             }
             // 1.1's accessory gate covers all 16 types, including the four legacy
             // candidates. Keep the MBTI setting/behavior, but load no unapproved art.
             pet.setMBTIDecoration(nil)
+            lastStaticMotion.removeValue(forKey: identity.id)
+            renderMotion(for: pet)
         }
         renderWorkspace()
     }
@@ -134,6 +146,7 @@ final class PetSceneController: PetSceneServicing {
         stopInteractionMonitoring()
         idleMotionController.stopAll(pets: Array(petLayers.values))
         for pet in petLayers.values {
+            motionClocks[pet.botId]?.pause()
             pet.opacity = 1
             pet.removeAllAnimations()
             pet.sublayers?.forEach { $0.removeAllAnimations() }
@@ -162,7 +175,7 @@ final class PetSceneController: PetSceneServicing {
 
     func updatePresence(_ state: PresenceState, botId: BotID, revision: UInt64) {
         presenceByBot[botId] = (state, revision)
-        petLayers[botId]?.showStateMarker(state)
+        updateMotionState(state, botID: botId)
         renderWorkspace()
     }
 
@@ -174,7 +187,7 @@ final class PetSceneController: PetSceneServicing {
         groupAssignments = snapshot.assignments
         for (id, state) in states {
             presenceByBot[id] = (state, revision)
-            petLayers[id]?.showStateMarker(state)
+            updateMotionState(state, botID: id)
         }
         renderWorkspace()
     }
@@ -185,6 +198,8 @@ final class PetSceneController: PetSceneServicing {
         accessibilityObserver = nil
         petLayers.values.forEach { $0.removeFromSuperlayer() }
         petLayers.removeAll()
+        motionClocks.removeAll()
+        motionSampler.resetAll()
         fogLayer.removeFromSuperlayer()
         panel.contentView?.layer = nil
         panel.close()
@@ -201,6 +216,7 @@ final class PetSceneController: PetSceneServicing {
         // coexist with the Core Animation scene. A layer-hosting view cannot do both.
         content.layer?.addSublayer(sceneLayer)
         panel.contentView = content
+        content.onHighlightedBot = { [weak self] id in self?.focusDoneMotion(id) }
         panel.acceptsMouseMovedEvents = true
         panel.isReleasedWhenClosed = false
         accessibilityObserver = NSWorkspace.shared.notificationCenter.addObserver(
@@ -370,8 +386,14 @@ final class PetSceneController: PetSceneServicing {
             return event
         }
         interactionTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.refreshInteraction() }
+            MainActor.assumeIsolated {
+                self?.advanceMotion()
+                self?.refreshInteraction()
+            }
         }
+        interactionTimer?.tolerance = 0.003
+        if let interactionTimer { RunLoop.main.add(interactionTimer, forMode: .common) }
+        advanceMotion()
     }
 
     private func stopInteractionMonitoring() {
@@ -395,7 +417,10 @@ final class PetSceneController: PetSceneServicing {
         view.updateTargets(isVisible ? targets : [])
         let mouse = panel.convertPoint(fromScreen: NSEvent.mouseLocation)
         view.updatePointer(at: mouse)
-        panel.ignoresMouseEvents = !isVisible || !view.containsInteractivePoint(mouse)
+        let ignoresMouseEvents = !isVisible || !view.containsInteractivePoint(mouse)
+        if panel.ignoresMouseEvents != ignoresMouseEvents {
+            panel.ignoresMouseEvents = ignoresMouseEvents
+        }
     }
 
     private var currentTopology: ScreenTopology {
@@ -451,6 +476,8 @@ final class PetSceneController: PetSceneServicing {
         let newReducesMotion = systemReducedMotion || experienceFixture?.reducedMotion == true
         if newReducesMotion != reducesMotion {
             reducesMotion = newReducesMotion
+            lastStaticMotion.removeAll()
+            for id in motionClocks.keys { motionClocks[id]?.pause() }
             if reducesMotion {
                 for pet in petLayers.values where destinations[pet.botId] == nil {
                     idleMotionController.stop(botId: pet.botId)
@@ -462,6 +489,75 @@ final class PetSceneController: PetSceneServicing {
             wallpaper: experienceFixture?.wallpaper ?? .complex,
             reducedTransparency: systemReducedTransparency || experienceFixture?.reducedTransparency == true
         )
+        for pet in petLayers.values { renderMotion(for: pet) }
+    }
+
+    private func updateMotionState(_ state: PresenceState, botID: BotID) {
+        if motionClocks[botID] == nil { motionClocks[botID] = PresenceMotionClock() }
+        if motionClocks[botID]?.setState(state) == true {
+            motionSampler.reset(instanceID: botID)
+            motionSampler.reset(instanceID: botID + ".focus")
+            lastStaticMotion.removeValue(forKey: botID)
+            petLayers[botID]?.focusDone(on: nil, duration: 0)
+        }
+        if let pet = petLayers[botID] { renderMotion(for: pet) }
+    }
+
+    /// A single display cadence owns all visible state poses. Layout/edge movement
+    /// stays on the parent PetLayer and cannot overwrite a sampled body pose.
+    func advanceMotion(now: TimeInterval = CACurrentMediaTime()) {
+        let highlighted = (panel.contentView as? InteractiveSceneView)?.highlightedBotID
+        for (id, pet) in petLayers {
+            let current = pet.presentation() ?? pet
+            let onScreen = sceneLayer.bounds.intersects(current.convert(current.bounds, to: current.superlayer))
+            let running = isVisible && !pet.isHidden && onScreen && current.opacity > 0.02
+                && !reducesMotion && !(highlighted == id && motionClocks[id]?.state == .done)
+            motionClocks[id]?.advance(to: now, running: running)
+            if isVisible && (running || reducesMotion) { renderMotion(for: pet) }
+        }
+    }
+
+    private func renderMotion(for pet: PetLayer) {
+        guard let clock = motionClocks[pet.botId] else { return }
+        if reducesMotion, lastStaticMotion[pet.botId] == clock.state { return }
+        if pet.isDoneFocused {
+            let frame = motionSampler.sample(shape: pet.shape, state: .done, time: 5.9,
+                instanceID: pet.botId + ".focus", reducedMotion: reducesMotion)
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            pet.focusDone(on: frame, duration: 0)
+            CATransaction.commit()
+            if reducesMotion { lastStaticMotion[pet.botId] = clock.state }
+            return
+        }
+        let frame = motionSampler.sample(shape: pet.shape, state: clock.state, time: clock.sampleTime,
+                                         instanceID: pet.botId, reducedMotion: reducesMotion)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        pet.renderNativeMotion(frame)
+        CATransaction.commit()
+        if reducesMotion { lastStaticMotion[pet.botId] = clock.state }
+    }
+
+    func motionTime(for botID: BotID) -> TimeInterval? { motionClocks[botID]?.elapsed }
+    func motionPhaseSlot(for botID: BotID) -> Int? { motionClocks[botID]?.phaseSlot }
+
+    private func focusDoneMotion(_ botID: BotID?) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for (id, pet) in petLayers {
+            let focused = id == botID && motionClocks[id]?.state == .done
+            guard focused != pet.isDoneFocused else { continue }
+            motionClocks[id]?.pause()
+            lastStaticMotion.removeValue(forKey: id)
+            // The quiet end of the approved Done phrase faces front without ribbons.
+            // Reduced motion retains its approved representative, including recognition.
+            let frame = focused ? motionSampler.sample(shape: pet.shape, state: .done, time: 5.9,
+                instanceID: id + ".focus", reducedMotion: reducesMotion) : nil
+            pet.focusDone(on: frame, duration: reducesMotion ? 0 : 0.18)
+            if !focused { motionSampler.reset(instanceID: id + ".focus") }
+        }
+        CATransaction.commit()
     }
 
     private var edgeGeometry: EdgeGeometry {

@@ -153,7 +153,8 @@ enum AppAssembly {
             completionStore: CompletionLedgerStore(defaults: runtimeDefaults),
             notificationReceiptStore: NotificationReceiptStore(defaults: runtimeDefaults),
             notificationHandler: { event in Task { await notifications.deliver(event) } },
-            notificationService: notifications
+            notificationService: notifications,
+            dockService: DockController()
         )
     }
 }

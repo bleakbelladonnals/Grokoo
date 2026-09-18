@@ -154,5 +154,44 @@
       "preservesShape": false,
       "fallback": "instantPositionFadeIn"
     }
+  },
+  "nativePresence": {
+    "kitVersion": "1.0.0",
+    "driver": "NativeMotionSampler",
+    "states": [
+      "idle",
+      "working",
+      "thinking",
+      "waiting",
+      "blocked",
+      "done",
+      "offline"
+    ],
+    "resetOnStateChange": true,
+    "pauseWhileHidden": true,
+    "done": {
+      "firstTrigger": 0.14,
+      "actionDuration": 5.49,
+      "retriggerInterval": 6.2
+    },
+    "working": {
+      "initialSpinDelay": [
+        1.2,
+        2.4
+      ],
+      "subsequentDelay": [
+        6,
+        9
+      ]
+    },
+    "staticTimes": {
+      "idle": 1,
+      "working": 1.2,
+      "thinking": 2.4,
+      "waiting": 2.4,
+      "blocked": 2.4,
+      "done": 4.85,
+      "offline": 0.35
+    }
   }
 }

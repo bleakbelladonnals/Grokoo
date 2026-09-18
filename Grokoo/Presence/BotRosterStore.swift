@@ -20,17 +20,11 @@ actor BotRosterStore {
                 let existing = snapshot.groups[record.id]
                 let suppliedMembers = record.memberIds.isEmpty ? existing?.memberIds ?? [] : record.memberIds
                 let validMembers = Self.normalizedMembers(suppliedMembers, bots: snapshot.bots)
-                let runtimeFields = record.providedRuntimeFields
-                let suppliedCompleteRuntime = runtimeFields.contains(.isRunning)
-                    && runtimeFields.contains(.isComposingMessage)
-                let suppliedActiveRuntime = (runtimeFields.contains(.isRunning) && record.isRunning)
-                    || (runtimeFields.contains(.isComposingMessage) && record.isComposingMessage)
-                let groupIsRunning = suppliedActiveRuntime
-                    || (!suppliedCompleteRuntime && existing?.isRunning == true)
                 snapshot.groups[record.id] = GroupRuntime(
                     id: record.id,
+                    name: record.name == record.id ? existing?.name ?? record.name : record.name,
                     memberIds: validMembers,
-                    isRunning: groupIsRunning
+                    runtime: Self.mergedRuntime(from: record, previous: existing?.runtime)
                 )
                 snapshot.bots.removeValue(forKey: record.id)
                 snapshot.botOrder.removeAll { $0 == record.id }
@@ -42,14 +36,7 @@ actor BotRosterStore {
                     shape: record.avatarShape == nil ? previous?.identity.shape ?? .blob : OfficialShape(gatewayValue: record.avatarShape),
                     color: record.avatarColor == nil ? previous?.identity.color ?? .black : OfficialColor(gatewayValue: record.avatarColor)
                 )
-                var runtime = GatewayPresenceAdapter.runtime(from: record)
-                if !record.providedRuntimeFields.contains(.isRunning) { runtime.isRunning = previous?.runtime.isRunning ?? false }
-                if !record.providedRuntimeFields.contains(.isComposingMessage) { runtime.isThinking = previous?.runtime.isThinking ?? false }
-                if !record.providedRuntimeFields.contains(.awaitingUserResponse) {
-                    runtime.awaitingUserResponse = previous?.runtime.awaitingUserResponse
-                    runtime.waitingEvent = previous?.runtime.waitingEvent
-                }
-                runtime.messageRevision = record.messageRevision ?? previous?.runtime.messageRevision
+                let runtime = Self.mergedRuntime(from: record, previous: previous?.runtime)
                 snapshot.bots[record.id] = BotPresence(identity: identity, runtime: runtime)
                 if previous == nil { snapshot.botOrder.append(record.id) }
                 snapshot.groups.removeValue(forKey: record.id)
@@ -57,6 +44,7 @@ actor BotRosterStore {
             pruneMissingGroupMembers()
         case .messageMetadata(let botId, let revision):
             snapshot.bots[botId]?.runtime.messageRevision = revision
+            snapshot.groups[botId]?.runtime.messageRevision = revision
         case .agentRemoved(let id):
             snapshot.bots.removeValue(forKey: id)
             snapshot.botOrder.removeAll { $0 == id }
@@ -87,11 +75,24 @@ actor BotRosterStore {
         for record in records where record.isGroup {
             groups[record.id] = GroupRuntime(
                 id: record.id,
+                name: record.name,
                 memberIds: normalizedMembers(record.memberIds, bots: bots),
-                isRunning: record.isRunning || record.isComposingMessage
+                runtime: GatewayPresenceAdapter.runtime(from: record)
             )
         }
         return RosterSnapshot(bots: bots, groups: groups, botOrder: botOrder)
+    }
+
+    private static func mergedRuntime(from record: GatewayAgentRecord, previous: BotRuntime?) -> BotRuntime {
+        var runtime = GatewayPresenceAdapter.runtime(from: record)
+        if !record.providedRuntimeFields.contains(.isRunning) { runtime.isRunning = previous?.isRunning ?? false }
+        if !record.providedRuntimeFields.contains(.isComposingMessage) { runtime.isThinking = previous?.isThinking ?? false }
+        if !record.providedRuntimeFields.contains(.awaitingUserResponse) {
+            runtime.awaitingUserResponse = previous?.awaitingUserResponse
+            runtime.waitingEvent = previous?.waitingEvent
+        }
+        runtime.messageRevision = record.messageRevision ?? previous?.messageRevision
+        return runtime
     }
 
     private func pruneMissingGroupMembers() {

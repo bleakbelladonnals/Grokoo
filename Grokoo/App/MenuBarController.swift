@@ -11,6 +11,7 @@ final class MenuBarController: NSObject {
     private let onFocusWorkspace: (() -> Void)?
     private let onAcknowledgeDone: ((BotID) -> Void)?
     private let onAcknowledgeAllDone: (() -> Void)?
+    private let onOpenMotionExperience: (() -> Void)?
     private var summaryItem: NSMenuItem?
     private var detailItem: NSMenuItem?
     private var doneItem: NSMenuItem?
@@ -38,7 +39,8 @@ final class MenuBarController: NSObject {
         onQuit: @escaping () -> Void,
         onFocusWorkspace: (() -> Void)? = nil,
         onAcknowledgeDone: ((BotID) -> Void)? = nil,
-        onAcknowledgeAllDone: (() -> Void)? = nil
+        onAcknowledgeAllDone: (() -> Void)? = nil,
+        onOpenMotionExperience: (() -> Void)? = nil
     ) {
         self.statusBar = statusBar
         statusItem = statusBar.statusItem(withLength: NSStatusItem.variableLength)
@@ -49,6 +51,7 @@ final class MenuBarController: NSObject {
         self.onFocusWorkspace = onFocusWorkspace
         self.onAcknowledgeDone = onAcknowledgeDone
         self.onAcknowledgeAllDone = onAcknowledgeAllDone
+        self.onOpenMotionExperience = onOpenMotionExperience
         super.init()
         configureStatusItem()
         observeApplicationMenu()
@@ -250,6 +253,11 @@ final class MenuBarController: NSObject {
         menu.addItem(menuItem(title: "隐藏全部", action: #selector(hideAll)))
         menu.addItem(.separator())
         menu.addItem(menuItem(title: "设置…", action: #selector(openSettings), keyEquivalent: ","))
+        #if DEBUG
+        if onOpenMotionExperience != nil {
+            menu.addItem(menuItem(title: "原生动作检查…", action: #selector(openMotionExperience)))
+        }
+        #endif
         menu.addItem(.separator())
         menu.addItem(menuItem(title: "退出 Grokoo", action: #selector(quit), keyEquivalent: "q"))
         statusItem.menu = menu
@@ -265,6 +273,7 @@ final class MenuBarController: NSObject {
     @objc private func showAll() { onShowAll() }
     @objc private func hideAll() { onHideAll() }
     @objc private func openSettings() { onOpenSettings() }
+    @objc private func openMotionExperience() { onOpenMotionExperience?() }
     @objc private func quit() { onQuit() }
     @objc private func focusWorkspace() { onFocusWorkspace?() }
     @objc private func acknowledgeDone(_ sender: NSMenuItem) {
